@@ -2,11 +2,15 @@ from train_status import TrainStatus as ts
 from datetime import datetime
 from time import sleep
 
+import xmlrpc.client
+
 class Train():
     '''
     For instances of trains
     '''
+
     def __init__(self, train_number):
+        self.proxy = xmlrpc.client.SeverProxy("http://localhost:9877/")
         self.train_number = train_number
         self.location = ()
         self.status = ''
@@ -32,7 +36,7 @@ class Train():
                                                            direction = self.direction, speed = self.speed,
                                                            senttime = self.senttime)
         # Send it!
-        pass
+        self.recvtime = self.proxy.update_status(self.curstatus)
 
         # Everything successful, store the data
         errstatus = 'OK'
