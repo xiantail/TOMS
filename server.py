@@ -1,13 +1,13 @@
 from xmlrpc.server import SimpleXMLRPCServer
-from train_status import TrainStatus as ts
 from datetime import datetime
 from time import sleep
 
 status_dict = {}
 
-def update_status(**kwargs):
-    train_number, status = kwargs
-    status_dict[train_number] = status
+def update_status(curstatus):
+    print(curstatus)
+    for train_number in curstatus.keys():
+        status_dict[train_number] = curstatus[train_number]
     return datetime.now()
 
 def display_status():
