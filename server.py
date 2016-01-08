@@ -5,7 +5,7 @@ from time import sleep
 status_dict = {}
 
 def update_status(curstatus):
-    print(curstatus)
+    #print(curstatus)
     for train_number in curstatus.keys():
         status_dict[train_number] = curstatus[train_number]
     return datetime.now()
