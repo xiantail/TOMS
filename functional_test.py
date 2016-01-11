@@ -14,8 +14,8 @@ for n in range(1,21):
 import train
 import multiprocessing as mp
 
-for elem in train_list:
-    p = mp.Process(target=train.train_client, args=(elem,))
+for entry in train_list:
+    p = mp.Process(target=train.train_client, args=(entry,))
     p.start()
 
 # Step 3: Each client sends approval to the server then receives approval

@@ -56,7 +56,7 @@ class Train():
             self.recvtime = self.proxy.update_status(self.curstatus)
         except:
             errstatus = 'Error'
-            print('Communcation error occured at %s' % self.train_number)
+            print('Communcation error occured at %s %s' % (self.train_number, datetime.now()))
         else:
             errstatus = 'OK'
         self.store_status(errstatus)
@@ -67,7 +67,7 @@ class Train():
         self.curstatusfull = {'train_number': self.train_number, 'location': self.location,
                               'status': self.status, 'direction': self.direction,
                               'speed': self.speed, 'senttime': self.senttime, 'recvtime': self.recvtime,
-                              'recordtime': datetime.now()}
+                              'recordtime': datetime.now(), 'errstatus':errstatus}
         self.historydata.append(self.curstatusfull)
         if len(self.historydata) >= self.LOG_INTERVAL or self.status == 'FINS':
             self.save_locally(self.historydata)
@@ -84,12 +84,16 @@ class Train():
             filename = str(self.train_number) + self.dep_date
             with open(filename, 'at') as logfile:
                 fieldname = ['train_number', 'location', 'status', 'direction', 'speed', 'senttime', 'recvtime',
-                             'recordtime']
+                             'recordtime', 'errstatus']
                 log = csv.DictWriter(logfile, fieldnames=fieldname)
                 log.writerows(hist_data)
+            print('Log saved for %s at %s' % (self.train_number, datetime.now()))
 
         p = threading.Thread(target=save_into_file)
         p.start()
+        # At the end of the service, wait log to save
+        if self.status == 'FINS':
+            p.join()
 
 def train_client(train):
     '''
@@ -162,7 +166,7 @@ def train_client(train):
         if status == 'FINS':
             break
 
-    print('Operation %s is finished.' % atrain.train_number)
+    print('Operation %s is finished at %s.' % (atrain.train_number, datetime.now()))
 
 if __name__ == '__main__':
     # For unit test
@@ -209,7 +213,6 @@ if __name__ == '__main__':
             timer += 1
             if station_count == 2:
                 status = 'FINS'
-                break
             elif timer >= 30:
                 status = 'ACCL'
                 timer = 0
@@ -218,5 +221,7 @@ if __name__ == '__main__':
         location = (zone, point, cline)
         atrain.set_status(location, status, speed, senttime)
         atrain.send_status()
+        if status == 'FINS':
+            break
 
-    print('Operation %s is finished.' % atrain.train_number)
+    print('Operation %s is finished at %s.' % (atrain.train_number, datetime.now()))
