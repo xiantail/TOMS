@@ -19,6 +19,3 @@ if __name__ == '__main__':
     server = SimpleXMLRPCServer(('localhost', 9877))
     server.register_function(update_status, "update_status")
     server.serve_forever()
-    while True:
-        sleep(5)
-        display_status()
