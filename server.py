@@ -1,21 +1,39 @@
 from xmlrpc.server import SimpleXMLRPCServer
-from datetime import datetime
+from datetime import datetime, timedelta
+import multiprocessing as mp
 from time import sleep
 
-status_dict = {}
+class TrainServer():
+    ''' class for servers. Server should be triggered for each zone '''
 
-def update_status(curstatus):
-    #print(curstatus)
-    for train_number in curstatus.keys():
-        status_dict[train_number] = curstatus[train_number]
-    return datetime.now()
+    def __init__(self, zone, host, port, interval):
+        self.status_dict = {}
+        self.zone = zone
+        self.host = (host, port)
+        self.INTERVAL = interval
+        self.lastupdate = datetime.now()
 
-def display_status():
-    for train_number, status in status_dict:
-        print(train_number, status)
+        self.server = SimpleXMLRPCServer((self.host))
+        self.server.register_function(self.provide_status, "provide_status")
+        self.server.register_function(self.update_status, "update_status")
+
+    def start_server(self):
+        try:
+            print('Server starting.... Ctrl+C to exit')
+            self.server.serve_forever()
+        except KeyboardInterrupt:
+            print('Server stopped at %s' % datetime.now())
+
+    def update_status(self, curstatus):
+        for train_number in curstatus.keys():
+            self.status_dict[train_number] = curstatus[train_number]
+            print('status_dict has %s entries' % len(self.status_dict))
+        return datetime.now()
+
+    def provide_status(self):
+        return self.status_dict
 
 
 if __name__ == '__main__':
-    server = SimpleXMLRPCServer(('localhost', 9877))
-    server.register_function(update_status, "update_status")
-    server.serve_forever()
+    ts = TrainServer('S', 'localhost', 9877, 5)
+    ts.start_server()

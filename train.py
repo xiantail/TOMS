@@ -9,8 +9,9 @@ class Train():
     For instances of trains
     '''
 
-    def __init__(self, train_number):
-        self.proxy = xmlrpc.client.ServerProxy("http://localhost:9877/")
+    def __init__(self, train_number, host, port):
+        self.host = 'http://' + host + ':' + str(port) + '/'
+        self.proxy = xmlrpc.client.ServerProxy(self.host)
         self.train_number = train_number
         self.location = ()
         self.status = ''
@@ -50,8 +51,9 @@ class Train():
                                              'direction':self.direction, 'speed':self.speed,
                                              'senttime':self.senttime}
         # Send it!
-        # OS Error [Errno 41] occurs in case of 20+ processes
-        # In case of error, should skip this time try next instead of terminate process
+        # temporary to get exception detail
+        #self.recvtime = self.proxy.update_status(self.curstatus)
+        #errstatus = 'dummy'
         try:
             self.recvtime = self.proxy.update_status(self.curstatus)
         except:
@@ -95,7 +97,7 @@ class Train():
         if self.status == 'FINS':
             p.join()
 
-def train_client(train):
+def train_client(train, host, port):
     '''
     Temporary version to test
     :param train_number: Train number to identify
@@ -103,7 +105,7 @@ def train_client(train):
     :return:
     '''
     train_number, stops = train
-    atrain = Train(train_number)
+    atrain = Train(train_number, host, port)
     # Judge direction
     number = int(re.match(r'\d*', train_number).group())
     if number % 2 == 1:
@@ -170,7 +172,7 @@ def train_client(train):
 
 if __name__ == '__main__':
     # For unit test
-    atrain = Train('6001S')
+    atrain = Train('6001S', 'localhost', 9877)
     location = ('S', 0.0, 'S')
     atrain.get_approval(location, 'REQA', 'O', datetime.now())
     atrain.LOG_INTERVAL = 10    #Default value is too long for unit test
