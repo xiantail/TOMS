@@ -15,7 +15,7 @@ if __name__ == '__main__':
     import multiprocessing as mp
 
     for entry in train_list:
-        p = mp.Process(target=train.train_client, args=(entry, 'localhost', 9877))
+        p = mp.Process(target=train.train_client, args=(entry, '127.0.0.1', 9877))
         p.start()
 
 # Step 3: Each client sends approval to the server then receives approval
