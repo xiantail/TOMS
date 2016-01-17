@@ -10,3 +10,8 @@ class TrainStatus():
     trainstatus_full = namedtuple("TrainStatusFull", "train_number errstatus location status direction speed senttime recvtime recordtime")
 
     #Constants
+    #msgtype for communication
+    msgAPPR = 'Approval'
+    msgSREP = 'Status Report'
+    msgEND = 'End Service'
+    msgSNAP = 'Get snapshot'
