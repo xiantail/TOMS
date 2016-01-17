@@ -24,6 +24,16 @@ class TrainServer():
         except KeyboardInterrupt:
             print('Server stopped at %s' % datetime.now())
 
+    def dispatcher(self, *args, **kwargs):
+        '''
+        dispatch queue entries to appropriate methods to process
+        '''
+        pass
+        #Case 1: Receive request for approval(REQA) / Return the schedule
+        #Case 2: Receive regular status every second and update status table / Return recv time
+        #Case 3: Receive finished status then clear from the status table
+        #Finally send back (return) to the requester
+
     def update_status(self, curstatus):
         for train_number in curstatus.keys():
             self.status_dict[train_number] = curstatus[train_number]
