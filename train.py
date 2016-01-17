@@ -1,8 +1,8 @@
 from datetime import datetime
 from time import sleep
 import re
-
-import xmlrpc.client
+from train_status import TrainStatus as tc
+import zmq
 
 class Train():
     '''
@@ -10,8 +10,11 @@ class Train():
     '''
 
     def __init__(self, train_number, host, port):
-        self.host = 'http://' + host + ':' + str(port) + '/'
-        self.proxy = xmlrpc.client.ServerProxy(self.host)
+        self.host = host
+        self.port = port
+        self.context = zmq.Context()
+        self.client = self.context.socket(zmq.REQ)
+
         self.train_number = train_number
         self.location = ()
         self.status = ''
@@ -27,16 +30,23 @@ class Train():
         # Take logs into local file every x records
         self.LOG_INTERVAL = 100
 
+    def connect_to_server(self):
+        try:
+            self.client.connect("tcp://%s:%s" % (self.host, self.port))
+        except:
+            print('Connection to server failed at %s' % datetime.now())
+
     def get_approval(self, location, status, direction, senttime):
         self.location = location
         self.status = status    #Must be 'REQA'
         self.direction = direction
         self.senttime = senttime
-        errstatus = self.send_status()
-        if errstatus == 'Error':
-            print('Not approved')
-        else:
+        response = self.send_status(msg_type=tc.msgAPPR)
+        if response['contents']['approval']:
             self.status = 'RDEP'
+            print('Departure on schedule is approved for %s at %s' % (self.train_number, response['contents']['recvtime']))
+        else:
+            print('Not approved due to reason: %s' % response['contents']['reject_reason'])
 
     def set_status(self, location, status, speed, senttime):
         self.location = location
@@ -44,25 +54,30 @@ class Train():
         self.speed = speed
         self.senttime = senttime
 
-    def send_status(self):
+    def send_status(self, msg_type=tc.msgSREP):
         self.senttime = datetime.now()
         # Prepare data for sending
-        self.curstatus[self.train_number] = {'location':self.location, 'status':self.status,
-                                             'direction':self.direction, 'speed':self.speed,
-                                             'senttime':self.senttime}
+        message = {}
+        message['train_number'] = self.train_number
+        message['msgtype'] = msg_type
+        message['contents'] = self.curstatus[self.train_number] = {'location':self.location, 'status':self.status,
+                                                                   'direction':self.direction, 'speed':self.speed,
+                                                                   'senttime':self.senttime}
         # Send it!
         # temporary to get exception detail
         #self.recvtime = self.proxy.update_status(self.curstatus)
         #errstatus = 'dummy'
         try:
-            self.recvtime = self.proxy.update_status(self.curstatus)
+            self.client.send_pyobj(message)
+            response = self.client.recv_pyobj()
+            self.recvtime = response['contents']['recvtime']
         except:
             errstatus = 'Error'
             print('Communcation error occured at %s %s' % (self.train_number, datetime.now()))
         else:
             errstatus = 'OK'
         self.store_status(errstatus)
-        return errstatus
+        return response
 
     def store_status(self, errstatus):
         # For historical data recording
@@ -106,6 +121,7 @@ def train_client(train, host, port):
     '''
     train_number, stops = train
     atrain = Train(train_number, host, port)
+    atrain.connect_to_server()
     # Judge direction
     number = int(re.match(r'\d*', train_number).group())
     if number % 2 == 1:
@@ -172,8 +188,10 @@ def train_client(train, host, port):
 
 if __name__ == '__main__':
     # For unit test
-    atrain = Train('6001S', 'localhost', 9877)
+    atrain = Train('6001S', '127.0.0.1', 9877)
     location = ('S', 0.0, 'S')
+    #connect to server
+    atrain.connect_to_server()
     atrain.get_approval(location, 'REQA', 'O', datetime.now())
     atrain.LOG_INTERVAL = 10    #Default value is too long for unit test
     # Only for Unit test purpose
