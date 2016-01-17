@@ -48,7 +48,7 @@ class TrainServer():
                     contents = self.update_status(train_number, contents)
                 elif msg_type == tc.msgEND:
                     contents = self.end_service(train_number, contents)
-                elif msg_type == tc.msgGSNA:
+                elif msg_type == tc.msgSNAP:
                     contents = self.provide_status()
                 else:
                     print('Invalid msgtype: %s' % message['msgtype'])
@@ -84,7 +84,7 @@ class TrainServer():
         return contents
 
     def end_service(self, train_number, contents):
-        self.statsu_dict.remove(train_number)
+        self.status_dict.pop(train_number)
         contents = {}
         contents['service_ended'] = True
         contents['recvtime'] = datetime.now()

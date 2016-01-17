@@ -145,6 +145,7 @@ def train_client(train, host, port):
         status = atrain.status
         speed = atrain.speed
         senttime = datetime.now()
+        msg_type = None
         # Only for test, simple logic
         if atrain.status == 'RDEP':
             status = 'ACCL'
@@ -173,6 +174,7 @@ def train_client(train, host, port):
             timer += 1
             if station_count == stops:
                 status = 'FINS'
+                msg_type = tc.msgEND
             elif timer >= 30:
                 status = 'ACCL'
                 timer = 0
@@ -180,7 +182,9 @@ def train_client(train, host, port):
 
         location = (zone, point, cline)
         atrain.set_status(location, status, speed, senttime)
-        atrain.send_status()
+        if not msg_type:
+            msg_type = tc.msgSREP
+        atrain.send_status(msg_type)
         if status == 'FINS':
             break
 
