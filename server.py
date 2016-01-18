@@ -16,8 +16,6 @@ class TrainServer():
         self.host = host
         self.port = port
         self.server = self.context.socket(zmq.REP)
-        #self.server.register_function(self.provide_status, "provide_status")
-        #self.server.register_function(self.update_status, "update_status")
 
     def run_server(self):
         response = {}
@@ -71,6 +69,9 @@ class TrainServer():
         return curstatus
 
     def provide_status(self):
+        contents={}
+        contents['status_table'] = True
+        contents['recvtime']=datetime.now()
         return self.status_dict
 
     def send_approval(self, train_number, contents):
@@ -86,8 +87,10 @@ class TrainServer():
     def end_service(self, train_number, contents):
         self.status_dict.pop(train_number)
         contents = {}
+        # Expected contents ['service_ended']['recvtime']
         contents['service_ended'] = True
         contents['recvtime'] = datetime.now()
+        return contents
 
 if __name__ == '__main__':
     ts = TrainServer('S', '127.0.0.1', 9877)

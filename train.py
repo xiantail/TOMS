@@ -64,9 +64,6 @@ class Train():
                                                                    'direction':self.direction, 'speed':self.speed,
                                                                    'senttime':self.senttime}
         # Send it!
-        # temporary to get exception detail
-        #self.recvtime = self.proxy.update_status(self.curstatus)
-        #errstatus = 'dummy'
         try:
             self.client.send_pyobj(message)
             response = self.client.recv_pyobj()
