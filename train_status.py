@@ -145,13 +145,10 @@ if __name__ == '__main__':
 
     for track in track_list:
         if track.name in ('TAI-MTU', 'MTU-YAN', 'YAN-TKU', 'TKU-KTA'):
-            track.type = 'A'
-
-    for track in track_list:
-        if track.type == 'A':
-            newtrack = copy.deepcopy(track)
-            newtrack.type = 'B'
-            track_list.append(newtrack)
+            track.type = 'M'
 
     for track in track_list:
         print(track.name, track.type, track.restriction)
+
+    for lane in lane_list:
+        print(lane.stationzone[0].name, lane.lane, lane.connection)
