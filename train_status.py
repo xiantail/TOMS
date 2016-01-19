@@ -1,3 +1,5 @@
+from time import sleep
+from datetime import datetime, timedelta
 
 class TrainStatus():
     '''
@@ -45,30 +47,51 @@ class StationZone(Station):
         self.center_position = center_position
         self.station_range = station_range   #tuple(0.000, 0.400)
 
-class Lane():
+class OccupationHandling():
+    def __init__(self):
+        self.occupied = None
+        self.release_time = None
+        self.wait_time = 90
+
+    def request_to_occupy(self, train_number):
+        if self.occupied:
+            return False
+        else:
+            self.occupied = train_number
+            return True
+
+    def request_to_release(self, train_number):
+        if self.occupied == train_number:
+            self.occupied = None
+            return True
+        else:
+            return False
+
+class Lane(OccupationHandling):
     '''
     Lane master in stations
     '''
     def __init__(self, stationzone, lane, offset, restriction, lane_range):
+        super().__init__()
         self.stationzone = [stationzone]  #StationZone list
         self.lane = lane
         self.offset = offset
         self.restriction = restriction
         self.lane_range = lane_range
-        self.occupied = False
         self.connection = []
 
-class Track():
+class Track(OccupationHandling):
     '''
     Track master
     '''
     def __init__(self, zone, name, speed, type, restriction):
+        super().__init__()
         self.zone = zone
         self.name = name
         self.speed = speed
-        self.type = type    #A, B or S
+        self.type = type    #Double tracks or Single track
         self.restriction = restriction
-        self.occupied = False
+        self.occupied = None
 
 class Garage():
     '''
