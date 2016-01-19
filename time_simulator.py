@@ -1,5 +1,49 @@
 from datetime import datetime, timedelta
 from time import sleep
+import math
+
+def calc_duration(distance, speed=(0.0, 70.0, 0.0), acceleration=3.0, decceleration=3.0, rounding=10, debug=False):
+    '''
+    :param distance: distance between stations in Kilometer
+    :param speed: (start speed, max speed, end speed)
+    :param acceleration: km/h/sec
+    :param decceleration: km/h/sec
+    :param rounding: 10,15,30,60
+    :return: duration time in seconds
+    '''
+    start_speed = speed[0]
+    max_speed = speed[1]
+    end_speed = speed[2]
+    # time to reach max_speed in sec.
+    ttrm = math.ceil((max_speed - start_speed) / acceleration)
+    # distance to reach max_speed in km
+    dtrm = round((max_speed - start_speed) / 2 * ttrm / 3600, 3)
+    # time to reach end_speed in sec.
+    ttre = math.ceil((max_speed - end_speed) / decceleration)
+    # distance to reach end_speed in km
+    dtre = round((max_speed - end_speed) / 2 * ttre / 3600, 3)
+    # distance with max_speed
+    dwms = distance - dtrm - dtre
+    if debug:
+        print('ttrm: %s' % ttrm)
+        print('dtrm: %s' % dtrm)
+        print('ttre: %s' % ttre)
+        print('dtre: %s' % dtre)
+        print('dwms: %s' % dwms)
+    if dwms > 0:
+        # time with max_speed
+        twms = math.ceil(dwms / max_speed * 3600)
+        if debug:
+            print('twms: %s' % twms)
+    else:   #distance is too short to reach max_speed
+        print('Max speed is too high in this section')
+        return 0
+    # rounding
+    if rounding not in (10, 15, 30, 60):
+        rounding = 10
+    duration = ttrm + twms + ttre
+    duration += (rounding - duration % rounding)
+    return duration
 
 if __name__ == '__main__':
     # set basedate
