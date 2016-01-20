@@ -56,6 +56,11 @@ class StationZone(Station):
                 self.assigned_lane.append(lane)
                 print('%s is assigned to station %s' % (lane.name, self.name))
 
+    def get_absrange(self):
+        range_low = self.station_range[0] + self.center_position
+        range_high = self.station_range[1] + self.center_position
+        return (range_low, range_high)
+
 class OccupationHandling():
     def __init__(self):
         self.occupied = None
@@ -89,6 +94,14 @@ class Lane(OccupationHandling):
         self.lane_range = lane_range
         self.connection = connection
 
+    def get_absrange(self):
+        range_low = self.lane_range[0] + self.stationzone[0].center_position
+        range_high = self.lane_range[1] + self.stationzone[0].center_position
+        return (range_low, range_high)
+
+    def get_absposition(self):
+        return self.offset + self.stationzone[0].center_position
+
 class Track(OccupationHandling):
     '''
     Track master
@@ -102,6 +115,9 @@ class Track(OccupationHandling):
         self.category = category    #Double tracks or Single track
         self.track_range = track_range
         self.occupied = None
+
+    def get_absrange(self):
+        return self.track_range
 
 class Garage():
     '''

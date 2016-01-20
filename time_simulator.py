@@ -38,9 +38,12 @@ class Simulator():
             reader = csv.DictReader(csvfile)
             for row in reader:
                 row['name'] = Simulator.station_name_dict[row['code']]
+                #convert fake tuple (stored as str in csv) into real tuple for range
+                lrange = row['station_range'].strip("()").split(", ")
+                station_range = tuple([float(x) for x in lrange])
                 #code, name, zone, center_position, station_range
                 sz = SZ(code=row['code'], name=row['name'], zone=row['zone'],
-                        center_position=row['center_position'], station_range=row['station_range'])
+                        center_position=row['center_position'], station_range=station_range)
                 Simulator.station_dict[row['code']]=sz
                 Simulator.station_list.append(sz)
 
@@ -48,9 +51,12 @@ class Simulator():
         with open('track_list.csv', 'rt') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
+                #convert str fake tuple into real tuple
+                lrange = row['track_range'].strip("()").split(", ")
+                track_range = tuple([float(x) for x in lrange])
                 #name, zone, speed, category, track_range
                 tr = TR(name=row['name'], zone=row['zone'], speed=row['speed'], category=row['category'],
-                        track_range=['track_range'])
+                        track_range=track_range)
                 Simulator.track_dict[row['name']]=tr
                 Simulator.track_list.append(tr)
 
@@ -70,14 +76,19 @@ class Simulator():
                 connection = []
                 #[stationzone], name, offset, lane_range, connection
                 stationzone = Simulator.station_dict[row['code']]
-                for elem in row['connection']:
-                    if 'G' in elem: # garages
+                #Convert str to list otherwise sliced per character
+                lclist = row['connection'].strip("[]'").split("', '")
+                for elem in lclist:
+                    if len(elem) == 4 and elem.startswith('G'): # garages
                         connection.append(Simulator.garage_dict[elem])
                     else:
                         connection.append(Simulator.track_dict[elem])
+                # convert str fake tuple into real tuple
+                lrange = row['lane_range'].strip("()").split(", ")
+                lane_range = tuple([float(x) for x in lrange])
                 ln = LN(stationzone=stationzone, name=row['name'], offset=row['offset'],
-                        lane_range=row['lane_range'], connection=connection)
-                Simulator.station_dict[row['code']].assign_lane(ln)
+                        lane_range=lane_range, connection=connection)
+                Simulator.station_dict[row['code']].assign_lane([ln])
                 Simulator.lane_list.append(ln)
 
     @classmethod
