@@ -46,7 +46,7 @@ class StationZone(Station):
     def __init__(self, code, name, zone, center_position, station_range):
         super().__init__(code, name)
         self.zone = zone
-        self.center_position = center_position
+        self.center_position = float(center_position)
         self.station_range = station_range   #tuple(0.000, 0.400)
         self.assigned_lane = []
 
@@ -57,9 +57,10 @@ class StationZone(Station):
                 print('%s is assigned to station %s' % (lane.name, self.name))
 
     def get_absrange(self):
-        range_low = self.station_range[0] + self.center_position
-        range_high = self.station_range[1] + self.center_position
+        range_low = self.station_range[0] + float(self.center_position)
+        range_high = self.station_range[1] + float(self.center_position)
         return (range_low, range_high)
+
 
 class OccupationHandling():
     def __init__(self):
@@ -90,17 +91,17 @@ class Lane(OccupationHandling):
         super().__init__()
         self.stationzone = [stationzone]  #StationZone list
         self.name = name
-        self.offset = offset
+        self.offset = float(offset)
         self.lane_range = lane_range
         self.connection = connection
 
     def get_absrange(self):
-        range_low = self.lane_range[0] + self.stationzone[0].center_position
-        range_high = self.lane_range[1] + self.stationzone[0].center_position
+        range_low = self.lane_range[0] + float(self.stationzone[0].center_position)
+        range_high = self.lane_range[1] + float(self.stationzone[0].center_position)
         return (range_low, range_high)
 
     def get_absposition(self):
-        return self.offset + self.stationzone[0].center_position
+        return self.offset + float(self.stationzone[0].center_position)
 
 class Track(OccupationHandling):
     '''
