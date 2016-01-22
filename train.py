@@ -10,16 +10,21 @@ class Train():
     '''
 
     def __init__(self, train_number, host, port):
+        # for commmunication
         self.host = host
         self.port = port
         self.context = zmq.Context()
         self.client = self.context.socket(zmq.REQ)
 
+        # train specific information
         self.train_number = train_number
-        self.location = ()
+        self.position = ()
         self.status = ''
         self.direction = ''
         self.speed = 0
+        self.assinged_cars = []
+
+        # for communication specific info
         self.senttime = None
         self.recvtime = None
         self.curstatus = {}
@@ -36,8 +41,8 @@ class Train():
         except:
             print('Connection to server failed at %s' % datetime.now())
 
-    def get_approval(self, location, status, direction, senttime):
-        self.location = location
+    def get_approval(self, position, status, direction, senttime):
+        self.position = position
         self.status = status    #Must be 'REQA'
         self.direction = direction
         self.senttime = senttime
@@ -48,8 +53,8 @@ class Train():
         else:
             print('Not approved due to reason: %s' % response['contents']['reject_reason'])
 
-    def set_status(self, location, status, speed, senttime):
-        self.location = location
+    def set_status(self, position, status, speed, senttime):
+        self.position = position
         self.status = status
         self.speed = speed
         self.senttime = senttime
@@ -60,7 +65,7 @@ class Train():
         message = {}
         message['train_number'] = self.train_number
         message['msgtype'] = msg_type
-        message['contents'] = self.curstatus[self.train_number] = {'location':self.location, 'status':self.status,
+        message['contents'] = self.curstatus[self.train_number] = {'position':self.position, 'status':self.status,
                                                                    'direction':self.direction, 'speed':self.speed,
                                                                    'senttime':self.senttime}
         # Send it!
@@ -78,7 +83,7 @@ class Train():
 
     def store_status(self, errstatus):
         # For historical data recording
-        self.curstatusfull = {'train_number': self.train_number, 'location': self.location,
+        self.curstatusfull = {'train_number': self.train_number, 'position': self.position,
                               'status': self.status, 'direction': self.direction,
                               'speed': self.speed, 'senttime': self.senttime, 'recvtime': self.recvtime,
                               'recordtime': datetime.now(), 'errstatus':errstatus}
@@ -97,7 +102,7 @@ class Train():
         def save_into_file():
             filename = str(self.train_number) + self.dep_date
             with open(filename, 'at') as logfile:
-                fieldname = ['train_number', 'location', 'status', 'direction', 'speed', 'senttime', 'recvtime',
+                fieldname = ['train_number', 'position', 'status', 'direction', 'speed', 'senttime', 'recvtime',
                              'recordtime', 'errstatus']
                 log = csv.DictWriter(logfile, fieldnames=fieldname)
                 log.writerows(hist_data)
@@ -123,11 +128,11 @@ def train_client(train, host, port):
     number = int(re.match(r'\d*', train_number).group())
     if number % 2 == 1:
         atrain.direction = 'O'  #Outbound / Outer circle
-        location = ('S', 0.0, 'S')
+        position = ('S', 0.0, 'S')
     else:
         atrain.direction = 'I'  #Inbound / Inner circle
-        location = ('S', 77.1, 'S')
-    atrain.get_approval(location, 'REQA', atrain.direction, datetime.now())
+        position = ('S', 77.1, 'S')
+    atrain.get_approval(position, 'REQA', atrain.direction, datetime.now())
     timer = 0
     station_count = 0
     while True:
@@ -136,9 +141,9 @@ def train_client(train, host, port):
         else:
             factor = -1
         sleep(1)
-        zone = atrain.location[0]
-        point = atrain.location[1]
-        cline = atrain.location[2]
+        zone = atrain.position[0]
+        point = atrain.position[1]
+        cline = atrain.position[2]
         status = atrain.status
         speed = atrain.speed
         senttime = datetime.now()
@@ -177,8 +182,8 @@ def train_client(train, host, port):
                 timer = 0
                 station_count += 1
 
-        location = (zone, point, cline)
-        atrain.set_status(location, status, speed, senttime)
+        position = (zone, point, cline)
+        atrain.set_status(position, status, speed, senttime)
         if not msg_type:
             msg_type = tc.msgSREP
         atrain.send_status(msg_type)
@@ -190,19 +195,19 @@ def train_client(train, host, port):
 if __name__ == '__main__':
     # For unit test
     atrain = Train('6001S', '127.0.0.1', 9877)
-    location = ('S', 0.0, 'S')
+    position = ('S', 0.0, 'S')
     #connect to server
     atrain.connect_to_server()
-    atrain.get_approval(location, 'REQA', 'O', datetime.now())
+    atrain.get_approval(position, 'REQA', 'O', datetime.now())
     atrain.LOG_INTERVAL = 10    #Default value is too long for unit test
     # Only for Unit test purpose
     timer = 0
     station_count = 0
     while True:
         sleep(1)
-        zone = atrain.location[0]
-        point = atrain.location[1]
-        cline = atrain.location[2]
+        zone = atrain.position[0]
+        point = atrain.position[1]
+        cline = atrain.position[2]
         status = atrain.status
         speed = atrain.speed
         senttime = datetime.now()
@@ -239,8 +244,8 @@ if __name__ == '__main__':
                 timer = 0
                 station_count += 1
 
-        location = (zone, point, cline)
-        atrain.set_status(location, status, speed, senttime)
+        position = (zone, point, cline)
+        atrain.set_status(position, status, speed, senttime)
         atrain.send_status()
         if status == 'FINS':
             break

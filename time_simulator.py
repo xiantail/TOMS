@@ -6,6 +6,7 @@ from train_status import StationZone as SZ
 from train_status import Track as TR
 from train_status import Garage as GR
 from train_status import Lane as LN
+from datetime import date, datetime
 
 import csv
 
@@ -13,6 +14,7 @@ class Simulator():
     '''
     Sample data can be generated with function create_sample_csv in train_status.py
     '''
+    # master data / equipments
     station_name_dict = {}
     station_list = []
     station_dict = {}
@@ -22,6 +24,10 @@ class Simulator():
     garage_dict = {}
     lane_list = []
     lane_dict = {}
+
+    # date / time
+    virtual_datetime = datetime(year=date.today().year, month=date.today().month, day=date.today().day,
+                                hour=4, minute=0, second=0)
 
     @classmethod
     def load_data(cls):
@@ -135,11 +141,11 @@ class Simulator():
         duration += (rounding - duration % rounding)
         return duration
 
+
 if __name__ == '__main__':
     # set basedate
     base_time = datetime(year=datetime.now().year, month=datetime.now().month, day=datetime.now().day,
                          hour=0, minute=0, second=0)
-
     # fastest mode
     start_timestamp = datetime.now()
     for i in range(86400):
