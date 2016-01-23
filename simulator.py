@@ -12,7 +12,7 @@ import csv
 
 class Simulator():
     '''
-    Sample data can be generated with function create_sample_csv in train_status.py
+    Sample data can be generated with function create_sample_csv in constants.py
     '''
     # master data / equipments
     station_name_dict = {}
