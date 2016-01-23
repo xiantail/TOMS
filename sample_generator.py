@@ -124,6 +124,19 @@ def create_sample_csv():
             writer.writerow(row)
     print('%s lanes are written' % len(lane_list))
 
+    #UnitSet (Train cars)
+    unitset_list = []
+    for i in range(1,20):
+        unitset_list.append({'unitsetid':i, 'cars':3, 'max_speed':100})
+    unitset_list.append({'unitsetid':20, 'cars':6, 'max_speed':160})
+    with open('unit_set.csv', 'wt') as csvfile:
+        fieldnames = ['unitsetid', 'cars', 'max_speed']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in unitset_list:
+            writer.writerow(row)
+    print('%s train unit sets are written' % len(unitset_list))
+
 if __name__ == '__main__':
 
     # create csv file anyway

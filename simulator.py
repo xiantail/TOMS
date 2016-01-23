@@ -1,11 +1,14 @@
 from datetime import datetime, timedelta
 from time import sleep
 import math
-from train_status import *
-from train_status import StationZone as SZ
-from train_status import Track as TR
-from train_status import Garage as GR
-from train_status import Lane as LN
+from master_structure import *
+from master_structure import StationZone as SZ
+from master_structure import Track as TR
+from master_structure import Garage as GR
+from master_structure import Lane as LN
+
+from train_cars import UnitSet
+
 from datetime import date, datetime
 
 import csv
@@ -24,6 +27,10 @@ class Simulator():
     garage_dict = {}
     lane_list = []
     lane_dict = {}
+
+    # master data / train cars
+    unitset_dict = {}
+    unitset_list = []
 
     # date / time
     virtual_datetime = datetime(year=date.today().year, month=date.today().month, day=date.today().day,
@@ -96,6 +103,15 @@ class Simulator():
                         lane_range=lane_range, connection=connection)
                 Simulator.station_dict[row['code']].assign_lane([ln])
                 Simulator.lane_list.append(ln)
+
+        # Step.6 load train unit set (cars)
+        with open('unit_set.csv', 'rt') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                us = UnitSet(unitsetid=row['unitsetid'], cars=int(row['cars']), max_speed=float(row['max_speed']))
+                Simulator.unitset_list.append(us)
+                Simulator.unitset_dict[us.unitsetid] = us
+
 
     @classmethod
     def calc_duration(cls, distance, speed=(0.0, 70.0, 0.0), acceleration=3.0, decceleration=3.0, rounding=10, debug=False):
