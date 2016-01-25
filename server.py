@@ -1,17 +1,23 @@
+import sys
 import zmq
 from datetime import datetime, timedelta
-from train_status import TrainStatus as tc
+from constants import TrainStatus as tc
+import configuration
+import configparser
 import multiprocessing as mp
 from time import sleep
 
 class TrainServer():
     ''' class for servers. Server should be triggered for each zone '''
 
-    def __init__(self, zone, host, port):
+    def __init__(self, zone, host, port, mode='S'):
+        # General parameters
+        self.mode = mode
         self.status_dict = {}
         self.zone = zone
         self.lastupdate = datetime.now()
 
+        # Technical setting (communication)
         self.context = zmq.Context()
         self.host = host
         self.port = port
@@ -93,5 +99,24 @@ class TrainServer():
         return contents
 
 if __name__ == '__main__':
-    ts = TrainServer('S', '127.0.0.1', 9877)
+    #sys.args[1]->zone name, sys.args[2]->mode
+    param = sys.args[1:]
+    if not param.lower() == 'r':
+        param[1] = 'S'
+    else:
+        param[1] = param[1].upper()   # must be "R"
+    zone = sys.args[1].upper()
+    config = configuration.read_config()
+    if param[1] == 'S':
+        host = config['sim_server']['host']
+        port = config['sim_server']['port']
+    else:
+        host = config['server']['host']
+        port = config['server']['port']
+
+    ts = TrainServer(zone, host, port)
+
+    # load master data
+
+    # start server
     ts.run_server()
