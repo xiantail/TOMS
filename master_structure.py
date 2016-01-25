@@ -98,8 +98,30 @@ class Garage():
         self.lanes = lanes      #number of lanes in the garage
         self.locked = False    #if locked no further operations allowed
         self.connection = []
+        self.availability = lanes
 
     def add_connection(self, lane):
         self.connection.append(lane)
 
+'''
+    def movein_garage(self):
+        if self.availability > 0:
+            self.locked = True
+            self.availability -= 1
+            print('Slot available')
+            return True
+        else:
+            print('No available slot in the garage')
+            return False
 
+    def moveout_garage(self):
+        if self.locked == False:
+            self.locked = True
+            self.availability += 1
+
+    def lock_garage(self):
+        self.locked = True
+
+    def release_garage(self):
+        self.locked = False
+'''
