@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import sleep
 import re
-from train_status import TrainStatus as tc
+from constants import TrainStatus as tc
 import zmq
 
 class Train():
