@@ -10,6 +10,7 @@ class TrainStatus():
     msgSREP = 'Status Report'
     msgEND = 'End Service'
     msgSNAP = 'Get snapshot'
+    msgSETT = 'Set server time'  #Only for simulation purpose
 
     #Train Status
     staPREP = 'Preparation'         #Not approved yet

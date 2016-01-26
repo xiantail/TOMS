@@ -29,6 +29,11 @@ class TrainServer():
         self.port = port
         self.server = self.context.socket(zmq.REP)
 
+        self.servertime = datetime.now()
+        if mode == 'S':
+            self.servertime = datetime(year=datetime.now().year, month=datetime.now().month,
+                                       day=datetime.now().day, hour=3, minute=0, second=0)
+
     def upload_master_data(self, station_list, station_zone, track_list, garage_list, lane_list, unit_set):
         # Step.1 load station name
         station_name_dict = {}
@@ -104,6 +109,8 @@ class TrainServer():
                 Simulator.unitset_list.append(us)
                 Simulator.unitset_dict[us.unitsetid] = us
 
+    def set_servertime(self):
+        pass
 
     def run_server(self):
         response = {}
@@ -116,8 +123,11 @@ class TrainServer():
         while True:
             message = self.server.recv_pyobj()
             # Standard format
-            # {'train_number': train_number, 'contents':{contents}, 'msgtype':msg_type}
-            train_number = message.get('train_number')
+            # Obsolete:{'train_number': train_number, 'contents':{contents}, 'msgtype':msg_type}
+            # New format{'target':{'train_number'|'unit_set': '6001S'|'20'}, 'contents':{.....}, 'msgtype':msg_type}
+            # --- methods should be split into several blocks per msg_type, for example
+            train_number = message.get('train_number')  #Obsolete
+            target = message.get('target')
             contents = message.get('contents')
             msg_type = message.get('msgtype')
             # Exceptional case for getting snapshot
@@ -143,6 +153,7 @@ class TrainServer():
                       % (train_number, contents, msg_type, datetime.now()))
 
             response['train_number'] = train_number
+            response['target'] = target
             response['contents'] = contents
             response['msgtype'] = msg_type
             #Any orders to client?
