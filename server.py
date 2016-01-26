@@ -23,6 +23,17 @@ class TrainServer():
         self.zone = zone
         self.lastupdate = datetime.now()
 
+        # master data / equipments
+        self.station_name_dict = {}
+        self.station_list = []
+        self.station_dict = {}
+        self.track_list = []
+        self.track_dict = {}
+        self.garage_list = []
+        self.garage_dict = {}
+        self.lane_list = []
+        self.lane_dict = {}
+
         # Technical setting (communication)
         self.context = zmq.Context()
         self.host = host
@@ -34,28 +45,28 @@ class TrainServer():
             self.servertime = datetime(year=datetime.now().year, month=datetime.now().month,
                                        day=datetime.now().day, hour=3, minute=0, second=0)
 
-    def upload_master_data(self, station_list, station_zone, track_list, garage_list, lane_list, unit_set):
+    def upload_master_data(self, station_list, station_zone, track_list, garage_list, lane_list):
         # Step.1 load station name
         station_name_dict = {}
         with open(station_list, 'rt') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 # List is not required as this only be used to get name text
-                Simulator.station_name_dict[row['code']] = row['name']
+                self.station_name_dict[row['code']] = row['name']
 
         # Step.2 load zone specific station data
         with open(station_zone, 'rt') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                row['name'] = Simulator.station_name_dict[row['code']]
+                row['name'] = self.station_name_dict[row['code']]
                 #convert fake tuple (stored as str in csv) into real tuple for range
                 lrange = row['station_range'].strip("()").split(", ")
                 station_range = tuple([float(x) for x in lrange])
                 #code, name, zone, center_position, station_range
                 sz = SZ(code=row['code'], name=row['name'], zone=row['zone'],
                         center_position=row['center_position'], station_range=station_range)
-                Simulator.station_dict[row['code']]=sz
-                Simulator.station_list.append(sz)
+                self.station_dict[row['code']]=sz
+                self.station_list.append(sz)
 
         # Step.3 load tracks
         with open(track_list, 'rt') as csvfile:
@@ -67,8 +78,8 @@ class TrainServer():
                 #name, zone, speed, category, track_range
                 tr = TR(name=row['name'], zone=row['zone'], speed=row['speed'], category=row['category'],
                         track_range=track_range)
-                Simulator.track_dict[row['name']]=tr
-                Simulator.track_list.append(tr)
+                self.track_dict[row['name']]=tr
+                self.track_list.append(tr)
 
         # Step.4 load garages
         with open(garage_list, 'rt') as csvfile:
@@ -76,8 +87,8 @@ class TrainServer():
             for row in reader:
                 #code, lanes
                 gr = GR(code=row['code'], lanes=row['lanes'])
-                Simulator.garage_dict[row['code']]=gr
-                Simulator.garage_list.append(gr)
+                self.garage_dict[row['code']]=gr
+                self.garage_list.append(gr)
 
         # Step.5 load lanes
         with open(lane_list, 'rt') as csvfile:
@@ -85,29 +96,23 @@ class TrainServer():
             for row in reader:
                 connection = []
                 #[stationzone], name, offset, lane_range, connection
-                stationzone = Simulator.station_dict[row['code']]
+                stationzone = self.station_dict[row['code']]
                 #Convert str to list otherwise sliced per character
                 lclist = row['connection'].strip("[]'").split("', '")
                 for elem in lclist:
                     if len(elem) == 4 and elem.startswith('G'): # garages
-                        connection.append(Simulator.garage_dict[elem])
+                        connection.append(self.garage_dict[elem])
                     else:
-                        connection.append(Simulator.track_dict[elem])
+                        connection.append(self.track_dict[elem])
                 # convert str fake tuple into real tuple
                 lrange = row['lane_range'].strip("()").split(", ")
                 lane_range = tuple([float(x) for x in lrange])
                 ln = LN(stationzone=stationzone, name=row['name'], offset=row['offset'],
                         lane_range=lane_range, connection=connection)
-                Simulator.station_dict[row['code']].assign_lane([ln])
-                Simulator.lane_list.append(ln)
+                self.station_dict[row['code']].assign_lane([ln])
+                self.lane_list.append(ln)
 
-        # Step.6 load train unit set (cars)
-        with open(unit_set, 'rt') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                us = UnitSet(unitsetid=row['unitsetid'], cars=int(row['cars']), max_speed=float(row['max_speed']))
-                Simulator.unitset_list.append(us)
-                Simulator.unitset_dict[us.unitsetid] = us
+        # Step.6 load train unit set (cars) --> to be removed this block as unit_set should be loaded in client side
 
     def set_servertime(self):
         pass
@@ -219,8 +224,7 @@ if __name__ == '__main__':
                           station_zone = config['datafile']['station_zone'],
                           garage_list = config['datafile']['garage_list'],
                           lane_list = config['datafile']['lane_list'],
-                          track_list = config['datafile']['track_list'],
-                          unit_set = config['datafile']['unit_set'])
+                          track_list = config['datafile']['track_list'])
 
     # start server
     ts.run_server()

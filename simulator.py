@@ -1,12 +1,7 @@
 from datetime import datetime, timedelta
 from time import sleep
 import math
-from master_structure import *
-from master_structure import StationZone as SZ
-from master_structure import Track as TR
-from master_structure import Garage as GR
-from master_structure import Lane as LN
-
+import configuration
 from train_cars import UnitSet
 
 from datetime import date, datetime
@@ -17,16 +12,6 @@ class Simulator():
     '''
     Sample data can be generated with function create_sample_csv in constants.py
     '''
-    # master data / equipments
-    station_name_dict = {}
-    station_list = []
-    station_dict = {}
-    track_list = []
-    track_dict = {}
-    garage_list = []
-    garage_dict = {}
-    lane_list = []
-    lane_dict = {}
 
     # master data / train cars
     unitset_dict = {}
@@ -36,6 +21,16 @@ class Simulator():
     virtual_datetime = datetime(year=date.today().year, month=date.today().month, day=date.today().day,
                                 hour=4, minute=0, second=0)
 
+    @classmethod
+    def load_unitsets(cls):
+        config = configuration.read_config()
+        unit_set_list = config['datafile']['unit_set']      #should be unit_set.csv as default
+        with open(unit_set_list, 'rt') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                us = UnitSet(unitsetid=row['unitsetid'], cars=int(row['cars']), max_speed=float(row['max_speed']))
+                Simulator.unitset_list.append(us)
+                Simulator.unitset_dict[us.unitsetid] = us
 
     @classmethod
     def calc_duration(cls, distance, speed=(0.0, 70.0, 0.0), acceleration=3.0, decceleration=3.0, rounding=10, debug=False):
