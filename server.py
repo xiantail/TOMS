@@ -3,6 +3,7 @@ import zmq
 from datetime import datetime, timedelta
 from constants import TrainStatus as tc
 import configuration
+from simulator import Simulator
 import configparser
 import multiprocessing as mp
 from time import sleep
