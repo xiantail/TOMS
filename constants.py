@@ -11,6 +11,9 @@ class TrainStatus():
     msgEND = 'End Service'
     msgSNAP = 'Get snapshot'
     msgSETT = 'Set server time'  #Only for simulation purpose
+    msgINIT = 'Initialize Unit set'
+    msgMVOR = 'Request: Move-out from garage'
+    msgMVIR = 'Request: Move-in to garage'
 
     #Train Status
     staPREP = 'Preparation'         #Not approved yet
@@ -26,4 +29,10 @@ class TrainStatus():
     staOSTP = 'Ordered Stop'        #Stop ordered by Server
     staFINS = 'Service Finished'    #Finished operation
     strFWRD = 'Forwarding'          #Not in service
+
+    #Unit set status
+    stuMVOT = 'Move-out'
+    stuMVIN = 'Move-in'
+    stuWAIT = 'Waiting'
+    stuARRV = 'Arrived'
 

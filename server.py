@@ -114,8 +114,6 @@ class TrainServer():
 
         # Step.6 load train unit set (cars) --> to be removed this block as unit_set should be loaded in client side
 
-    def set_servertime(self):
-        pass
 
     def run_server(self):
         response = {}
@@ -126,19 +124,43 @@ class TrainServer():
             print('Server error occurred at %s' % datetime.now())
 
         while True:
+            # Step 1. Get message and split into elements
             message = self.server.recv_pyobj()
             # Standard format
-            # Obsolete:{'train_number': train_number, 'contents':{contents}, 'msgtype':msg_type}
-            # New format{'target':{'train_number'|'unit_set': '6001S'|'20'}, 'contents':{.....}, 'msgtype':msg_type}
-            # --- methods should be split into several blocks per msg_type, for example
-            train_number = message.get('train_number')  #Obsolete
-            target = message.get('target')
+            # New format{'msgtype':msg_type, 'contents':{.....}}
+            # Key - train_number or unitsetid should be in contents
+            #train_number: message['contents'].get('train_number')
+            #unitset_id: message['contents'].get('unitsetid')
             contents = message.get('contents')
             msg_type = message.get('msgtype')
-            # Exceptional case for getting snapshot
-            if msg_type == tc.msgSNAP:
-                train_number = 'dummy'
-                contents = {'dummy':'dummy'}
+
+            # Step 2. Dispatch the message to right option (method)
+            # Step 2.1 Set server time for simulation mode
+            if msg_type == tc.msgSETT:   #Set server time for simulation mode
+                # Expected messsage: {'msgtype':'Set server time', 'contents':datetime()}
+                contents = self.set_servertime(contents)
+            # Step 2.2 Provide snapshot
+            elif msg_type == tc.msgSNAP:
+                contents = self.provide_status(contents)
+            # Step 2.3 Initialize Unit Set in garage
+            elif msg_type == tc.msgINIT:
+                # Expected message {'msgtype':msgINIT, 'contents':{'unitsetid':xxxxx, 'destination': GTKU(garage)}
+                contents = self.initialize_unit_set(contents)
+            # Step 2.4 Move-out from garage to station lane
+            elif msg_type == tc.msgMVOR:
+                contents = self.handle_moveout_request(contents)
+            # Step 2.5 Move-in from station lane to garage
+            elif msg_type == tc.msgMVIR:
+                pass
+            # Step 2.5
+
+            # Step 2.99 : Incorrect message type
+            else:
+                print('Incorrect message type: %s' % msg_type)
+                contents['result'] = 'Incorrect message type'
+
+            '''
+            #---------------
             # Conditions for each message type
             if train_number and contents and msg_type:
                 print('Got message from %s at %s' % (message['train_number'], datetime.now()))
@@ -149,21 +171,58 @@ class TrainServer():
                     contents = self.update_status(train_number, contents)
                 elif msg_type == tc.msgEND:
                     contents = self.end_service(train_number, contents)
-                elif msg_type == tc.msgSNAP:
-                    contents = self.provide_status()
-                else:
-                    print('Invalid msgtype: %s' % message['msgtype'])
             else:   #message has invalid format
                 print('Received message has wrong format(train_number, contents, msgtype): %s %s %s at %s'
                       % (train_number, contents, msg_type, datetime.now()))
+            '''
 
-            response['train_number'] = train_number
-            response['target'] = target
             response['contents'] = contents
             response['msgtype'] = msg_type
-            #Any orders to client?
-            #response['order'] = ...
             self.server.send_pyobj(response)
+
+    def set_servertime(self,contents):
+        '''
+        Expected message : {'msgtype':msgSETT, 'contents':{'server_time':'2016-01-27 11:24:25'}}
+        '''
+        try:
+            newtime = contents.get('servertime')[:19]
+            self.servertime = datetime.strptime(newtime,'%Y-%m-%d %H:%M:%S')
+        except:
+            contents['result'] = 'Time format error!'
+        else:
+            print('Server time is now set to %s' % self.servertime)
+            contents['result'] = str(newtime)
+        return contents
+
+    def initialize_unit_set(self, contents):
+        # Load an Unit set in the garage
+        # Expected message {'msgtype':msgINIT, 'contents':{'unitsetid':xxxxx, 'destination': 'GTKU'(garage)}
+        unitsetid = contents.get('unitsetid')
+        if unitsetid:
+            garage = self.garage_dict[contents.get('destination')]
+            availability =  garage.lanes - len(garage.unitsets)
+            if availability > 0:
+                garage.unitsets.append(unitsetid)
+                contents['result'] = True
+                connected_lanes = []
+                for lane in garage.connection:
+                    connected_lanes.append(lane.name)
+                contents['connection'] = connected_lanes
+            else:
+                contents['result'] = False
+                contents['reason'] = 'All slots are occupied in garage'
+        else:
+            contents['result'] = False
+            contents['reason'] = 'Unit Set is not specified in the message'
+        if self.mode == 'S':
+            contents['resptime'] = self.servertime
+        else:
+            contents['resptime'] = datetime.now()
+        return contents
+
+    def handle_moveout_request(self, contents):
+        # Expected contents {'unitsetid':unit set id, 'destination':(station lane)}
+        pass
 
     def update_status(self, train_number, curstatus):
         self.status_dict[train_number] = curstatus
@@ -172,11 +231,15 @@ class TrainServer():
         curstatus['recvtime'] = datetime.now()
         return curstatus
 
-    def provide_status(self):
+    def provide_status(self, contents):
         contents={}
         contents['status_table'] = True
-        contents['recvtime']=datetime.now()
-        return self.status_dict
+        if self.mode == 'S':
+            contents['recvtime'] = self.servertime
+        else:
+            contents['recvtime'] = datetime.now()
+        contents['status_list'] = self.status_dict
+        return contents
 
     def send_approval(self, train_number, contents):
         # return approval and return schedule (to be implemented)
@@ -193,7 +256,10 @@ class TrainServer():
         contents = {}
         # Expected contents ['service_ended']['recvtime']
         contents['service_ended'] = True
-        contents['recvtime'] = datetime.now()
+        if self.mode == 'S':
+            contents['recvtime'] = self.servertime
+        else:
+            contents['recvtime'] = datetime.now()
         return contents
 
 if __name__ == '__main__':

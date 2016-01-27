@@ -22,7 +22,7 @@ class Train():
         self.status = ''
         self.direction = ''
         self.speed = 0
-        self.assinged_cars = []
+        self.assinged_unitset = []  #Unit set id
 
         # for communication specific info
         self.senttime = None
@@ -49,7 +49,8 @@ class Train():
         response = self.send_status(msg_type=tc.msgAPPR)
         if response['contents']['approval']:
             self.status = 'RDEP'
-            print('Departure on schedule is approved for %s at %s' % (self.train_number, response['contents']['recvtime']))
+            print('Departure on schedule is approved for %s at %s' % (self.train_number,
+                                                                      response['contents']['recvtime']))
         else:
             print('Not approved due to reason: %s' % response['contents']['reject_reason'])
 
@@ -63,11 +64,11 @@ class Train():
         self.senttime = datetime.now()
         # Prepare data for sending
         message = {}
-        message['train_number'] = self.train_number
         message['msgtype'] = msg_type
         message['contents'] = self.curstatus[self.train_number] = {'position':self.position, 'status':self.status,
                                                                    'direction':self.direction, 'speed':self.speed,
-                                                                   'senttime':self.senttime}
+                                                                   'senttime':self.senttime,
+                                                                   'train_number':self.train_number}
         # Send it!
         try:
             self.client.send_pyobj(message)
