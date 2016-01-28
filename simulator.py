@@ -27,6 +27,7 @@ class Simulator():
     context = zmq.Context()
     client = context.socket(zmq.REQ)
 
+
     @classmethod
     def setup_communication(cls):
         config = configuration.read_config()

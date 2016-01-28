@@ -125,13 +125,34 @@ def create_sample_csv():
             writer.writerow(row)
     print('%s lanes are written' % len(lane_list))
 
+    #CarUnit (Train cars)
+    carunit_list = []
+    for i in range(1,20):
+        if i < 18:
+            unitid = '{0}{1:x}{2:02d}'.format('B', 3, i).upper()
+            carunit_list.append({'unitid':unitid, 'cars':3, 'max_speed':100.0, 'acceleration':3.0,
+                                 'deceleration':3.0, 'emergency_factor':1.5})
+        else:   #the last one
+            unitid = '{0}{1:x}{2:02d}'.format('L', 6, i).upper()
+            carunit_list.append({'unitid':unitid, 'cars':6, 'max_speed':160.0, 'acceleration':2.5,
+                                 'deceleration':2.5, 'emergency_factor':1.8})
+    with open('carunit.csv', 'wt') as csvfile:
+        fieldnames = ['unitid', 'cars', 'max_speed', 'acceleration', 'deceleration', 'emergency_factor']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in carunit_list:
+            writer.writerow(row)
+        print('%s car units are written' % len(carunit_list))
+
     #UnitSet (Train cars)
     unitset_list = []
-    for i in range(1,20):
-        unitset_list.append({'unitsetid':i, 'cars':3, 'max_speed':100})
-    unitset_list.append({'unitsetid':20, 'cars':6, 'max_speed':160})
+    for unit in carunit_list:
+        assigned_unit = [unit.get('unitid')]
+        unitid = unit.get('unitid') + 'F'
+        unitset_list.append({'unitsetid':unitid, 'assigned_unit':assigned_unit, 'location':'GTKU'})
+
     with open('unit_set.csv', 'wt') as csvfile:
-        fieldnames = ['unitsetid', 'cars', 'max_speed']
+        fieldnames = ['unitsetid', 'assigned_unit', 'location']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in unitset_list:

@@ -25,6 +25,7 @@ class CarUnit():
         self.deceleration = deceleration
         self.emergency_factor = emergency_factor
         self.cars = cars
+
         if self.cars == 0:
             self.cars = 3   #in case neither cars nor assigned_cars provided
             self.length = 60.0
