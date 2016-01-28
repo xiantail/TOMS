@@ -128,7 +128,7 @@ def create_sample_csv():
     #CarUnit (Train cars)
     carunit_list = []
     for i in range(1,20):
-        if i < 18:
+        if i < 19:
             unitid = '{0}{1:x}{2:02d}'.format('B', 3, i).upper()
             carunit_list.append({'unitid':unitid, 'cars':3, 'max_speed':100.0, 'acceleration':3.0,
                                  'deceleration':3.0, 'emergency_factor':1.5})
@@ -136,7 +136,7 @@ def create_sample_csv():
             unitid = '{0}{1:x}{2:02d}'.format('L', 6, i).upper()
             carunit_list.append({'unitid':unitid, 'cars':6, 'max_speed':160.0, 'acceleration':2.5,
                                  'deceleration':2.5, 'emergency_factor':1.8})
-    with open('carunit.csv', 'wt') as csvfile:
+    with open('car_unit.csv', 'wt') as csvfile:
         fieldnames = ['unitid', 'cars', 'max_speed', 'acceleration', 'deceleration', 'emergency_factor']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()

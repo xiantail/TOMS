@@ -3,6 +3,7 @@ from time import sleep
 import math
 import configuration
 from train_cars import UnitSet
+from train_cars import CarUnit
 from constants import TrainStatus as tc
 from datetime import date, datetime
 import zmq
@@ -16,6 +17,8 @@ class Simulator():
     # master data / train cars
     unitset_dict = {}
     unitset_list = []
+    carunit_dict = {}
+    carunit_list = []
 
     # date / time
     virtual_datetime = datetime(year=date.today().year, month=date.today().month, day=date.today().day,
@@ -42,11 +45,27 @@ class Simulator():
     @classmethod
     def load_unitsets(cls):
         config = configuration.read_config()
-        unit_set_list = config['datafile']['unit_set']      #should be unit_set.csv as default
-        with open(unit_set_list, 'rt') as csvfile:
+        car_unit = config['datafile']['car_unit']
+        unit_set = config['datafile']['unit_set']
+
+        # read car unit information from csv file
+        with open(car_unit, 'rt') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                us = UnitSet(unitsetid=row['unitsetid'], cars=int(row['cars']), max_speed=float(row['max_speed']))
+                cn = CarUnit(unitid=row['unitid'], cars=int(row['cars']), max_speed=float(row['max_speed']),
+                             acceleration=float(row['acceleration']), deceleration=float(row['deceleration']),
+                                                emergency_factor=float(row['emergency_factor']))
+                Simulator.carunit_list.append(cn)
+                Simulator.carunit_dict[cn.unitid] = cn
+
+        # read unit set information from csv file
+        with open(unit_set, 'rt') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                # convert str to list for assigned units
+                lrange = row['assigned_unit'].strip("[']").split("', '")
+                assigned_unit = list([Simulator.carunit_dict[x] for x in lrange])
+                us = UnitSet(unitsetid=row['unitsetid'], assigned_unit=assigned_unit, location=str(row['location']))
                 Simulator.unitset_list.append(us)
                 Simulator.unitset_dict[us.unitsetid] = us
 

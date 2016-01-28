@@ -43,8 +43,10 @@ class UnitSet():
     '''
     Unit set to be assigned to Train(number)
     '''
-    def __init__(self, unitsetid, cars=0, assigned_unit=['DUMMY'], max_speed=100.0):
+    def __init__(self, unitsetid, location, cars=0, assigned_unit=['DUMMY'], max_speed=100.0):
         self.unitsetid = unitsetid
+        self.location = location
+        self.assigned_unit = assigned_unit
         if assigned_unit == ['DUMMY']:
             self.assigned_unit = []
             #Assign dummy CarUnit
