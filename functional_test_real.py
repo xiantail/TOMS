@@ -1,4 +1,4 @@
-# Functional test for TOM version 201601
+# Functional test for TOM version 201601 / For real mode
 if __name__ == '__main__':
 # Step 0: Start the server - separately started by server.py because of serve_forever()
 

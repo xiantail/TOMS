@@ -20,8 +20,14 @@ class Simulator():
     carunit_dict = {}
     carunit_list = []
 
+    # constants
+    MIN_PREP = timedelta(seconds=240)
+    MIN_STOP = timedelta(seconds=30)
+    MIN_PCHANGE = timedelta(seconds=90)
+
+
     # date / time
-    virtual_datetime = datetime(year=date.today().year, month=date.today().month, day=date.today().day,
+    _virtual_datetime = datetime(year=date.today().year, month=date.today().month, day=date.today().day,
                                 hour=4, minute=0, second=0)
 
     # Communication specific
@@ -70,8 +76,12 @@ class Simulator():
                 Simulator.unitset_dict[us.unitsetid] = us
 
     @classmethod
+    def set_virtualtime(cls, virtualtime):
+        Simulator._virtual_datetime = virtualtime
+
+    @classmethod
     def set_servertime(cls):
-        servertime = str(Simulator.virtual_datetime)
+        servertime = str(Simulator._virtual_datetime)
         message = {}
         message['msgtype'] = tc.msgSETT
         message['contents'] = {'servertime':servertime}
@@ -81,7 +91,7 @@ class Simulator():
 
     @classmethod
     def move_forward_seconds(cls, delta=1):
-        Simulator.virtual_datetime += timedelta(seconds=delta)
+        Simulator._virtual_datetime += timedelta(seconds=delta)
         response = Simulator.set_servertime()
         return response
 
