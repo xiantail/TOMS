@@ -81,7 +81,6 @@ class UnitSet():
         self.head_offset = round(self.length / 2 / 1000, 3)
         self.tail_offset = round(self.length / 2 / 1000, 3) * -1
         self.booked = None  #train_number to be assigned
-        self.location = None    #lane or garage to be assigned
 
 if __name__ == '__main__':
     #unit test: create 20 unitsets

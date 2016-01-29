@@ -65,7 +65,7 @@ class Simulator():
                 # convert str to list for assigned units
                 lrange = row['assigned_unit'].strip("[']").split("', '")
                 assigned_unit = list([Simulator.carunit_dict[x] for x in lrange])
-                us = UnitSet(unitsetid=row['unitsetid'], assigned_unit=assigned_unit, location=str(row['location']))
+                us = UnitSet(unitsetid=row['unitsetid'], location=str(row['location']), assigned_unit=assigned_unit)
                 Simulator.unitset_list.append(us)
                 Simulator.unitset_dict[us.unitsetid] = us
 

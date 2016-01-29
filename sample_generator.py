@@ -146,10 +146,13 @@ def create_sample_csv():
 
     #UnitSet (Train cars)
     unitset_list = []
-    for unit in carunit_list:
+    for i, unit in enumerate(carunit_list):
         assigned_unit = [unit.get('unitid')]
         unitid = unit.get('unitid') + 'F'
-        unitset_list.append({'unitsetid':unitid, 'assigned_unit':assigned_unit, 'location':'GTKU'})
+        location = 'GTKU'
+        if i < 2:
+            location = 'GOBA'
+        unitset_list.append({'unitsetid':unitid, 'assigned_unit':assigned_unit, 'location':location})
 
     with open('unit_set.csv', 'wt') as csvfile:
         fieldnames = ['unitsetid', 'assigned_unit', 'location']
