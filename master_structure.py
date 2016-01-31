@@ -21,7 +21,7 @@ class StationZone(Station):
 
     def assign_lane(self, lanes):
         for lane in lanes:
-            if type(lane)=='':
+            if isinstance(lane, Lane):
                 self.assigned_lane.append(lane)
                 print('%s is assigned to station %s' % (lane.name, self.name))
 

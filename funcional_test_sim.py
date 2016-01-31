@@ -43,7 +43,8 @@ if __name__ == '__main__':
         for i, entry in enumerate(process_sets):
             del_ent = []
             if entry[1] >= virtual_time:
-            #send status
+                #send status
+
             #if....:
             #  del_ent.append(i)
         # move forward virtual time

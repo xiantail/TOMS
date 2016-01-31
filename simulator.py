@@ -96,6 +96,24 @@ class Simulator():
         return response
 
     @classmethod
+    def move_garage_to_lane(cls, unitset, target_lane):
+        message = {}
+        message['msgtype'] = tc.msgMVOR
+        message['contents'] = {'unitset':unitset.unitsetid, 'location':unitset.location, 'target':target_lane}
+        Simulator.client.send_pyobj(message)
+        response = Simulator.client.recv_pyobj()
+        return response
+
+    @classmethod
+    def move_lane_to_garage(cls, unitset, target_slot=None):
+        message = {}
+        message['msgtype'] = tc.msgMVIR
+        message['contents'] = {'unitset':unitset.unitsetid, 'location':unitset.location, 'target':target_slot}
+        Simulator.client.send_pyobj(message)
+        response = Simulator.client.recv_pyobj()
+        return response
+
+    @classmethod
     def calc_duration(cls, distance, speed=(0.0, 70.0, 0.0), acceleration=3.0, decceleration=3.0, rounding=10, debug=False):
         '''
         :param distance: distance between stations in Kilometer

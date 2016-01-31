@@ -151,7 +151,7 @@ class TrainServer():
                 contents = self.handle_moveout_request(contents)
             # Step 2.5 Move-in from station lane to garage
             elif msg_type == tc.msgMVIR:
-                pass
+                contents = self.handle_movein_request(contents)
             # Step 2.5
 
             # Step 2.99 : Incorrect message type
@@ -221,8 +221,59 @@ class TrainServer():
         return contents
 
     def handle_moveout_request(self, contents):
+        # Expected contents {'unitset', 'location', 'target'}
+        unitset = contents.get('unitset')
+        location = contents.get('location')
+        target = contents.get('target')
+        contents = {}
+
+        #check availability of lane
+        try:
+            zstation = self.station_dict[location[1:]]
+        except:
+            contents['result'] = False
+            contents['reason'] = 'Wrong location provided (zone specific station not found)'
+            return contents
+
+        lane_availability = False
+        for lane in zstation.assigned_lane:
+            if lane.name == target and lane.occupied == [] and lane.booked == []:
+                lane_availability = True
+        if lane_availability == False:
+            contents['result'] = False
+            contents['reason'] = 'Target lane is not available at this moment'
+            contents['retry_after'] = self.servertime + timedelta(seconds=10)
+            return contents
+
+        #check availability of garage itself
+        try:
+            garage = self.garage_dict[location]
+        except:
+            contents['result'] = False
+            contents['reason'] = 'Wrong location provided (garage not found)'
+            return contents
+        garage_availability = False
+        if garage.occupied == [] and garage.booked == []:
+            garage_availability = True
+        else:
+            contents['result'] = False
+            contents['reason'] = 'Cannot outgoing from garage at this moment'
+            contents['retry_after'] = self.servertime + timedelta(seconds=10)
+            return contents
+
+        # Provide AFO of lane and garage
+        for lane in zstation.assigned_lane:
+            if lane.name == target:
+                lane.occupied = unitset
+                break
+        garage.occupied = unitset
+        contents['result'] = True
+        return contents
+
+    def handle_movein_request(self, contents):
         # Expected contents {'unitsetid':unit set id, 'destination':(station lane)}
         pass
+
 
     def update_status(self, train_number, curstatus):
         self.status_dict[train_number] = curstatus
