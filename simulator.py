@@ -6,6 +6,7 @@ from train_cars import UnitSet
 from train_cars import CarUnit
 from constants import TrainStatus as tc
 from datetime import date, datetime
+import message_types as mt
 import zmq
 import csv
 
@@ -97,9 +98,25 @@ class Simulator():
 
     @classmethod
     def move_garage_to_lane(cls, unitset, target_lane):
-        message = {}
-        message['msgtype'] = tc.msgMVOR
-        message['contents'] = {'unitset':unitset.unitsetid, 'location':unitset.location, 'target':target_lane}
+        request = mt.create_request(tc.msgMVOR, unitset=unitset.unitsetid, location=unitset.location,
+                                    target=target_lane)
+        message = mt.create_status_message(unitset=unitset.unitsetid, request=request, unitset_status=tc.stuWAIT)
+        Simulator.client.send_pyobj(message)
+        response = Simulator.client.recv_pyobj()
+        return response
+
+    @classmethod
+    def moving_into_lane(cls, unitset):
+        request = None  #Not necessary until arrive at the station lane
+        message = mt.create_status_message(unitset=unitset.unitsetid, request=request, unitset_status=tc.stuMVOT)
+        Simulator.client.send_pyobj(message)
+        response = Simulator.client.recv_pyobj()
+        return response
+
+    @classmethod
+    def arrived_at_lane(cls, unitset, lane):
+        request = {'reqtype':tc.msgREL, 'target':lane}
+        message = mt.create_status_message(unitset=unitset.unitsetid, request=request, unitset_status=tc.stuARRV)
         Simulator.client.send_pyobj(message)
         response = Simulator.client.recv_pyobj()
         return response

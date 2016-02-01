@@ -126,13 +126,9 @@ class TrainServer():
         while True:
             # Step 1. Get message and split into elements
             message = self.server.recv_pyobj()
-            # Standard format
-            # New format{'msgtype':msg_type, 'contents':{.....}}
-            # Key - train_number or unitsetid should be in contents
-            #train_number: message['contents'].get('train_number')
-            #unitset_id: message['contents'].get('unitsetid')
             contents = message.get('contents')
             msg_type = message.get('msgtype')
+            request = message.get('request')
 
             # Step 2. Dispatch the message to right option (method)
             # Step 2.1 Set server time for simulation mode
@@ -142,16 +138,21 @@ class TrainServer():
             # Step 2.2 Provide snapshot
             elif msg_type == tc.msgSNAP:
                 contents = self.provide_status(contents)
-            # Step 2.3 Initialize Unit Set in garage
-            elif msg_type == tc.msgINIT:
+            # Step 2.3 Status reporting : Branch for request type
+            elif msg_type == tc.msgSREP:
+                if contents['reqtype'] == tc.msgMVOR:
+                    contents = self.handle_moveout_request(contents)
+
+            ## Step 2.3 Initialize Unit Set in garage
+            ##elif msg_type == tc.msgINIT:
                 # Expected message {'msgtype':msgINIT, 'contents':{'unitsetid':xxxxx, 'destination': GTKU(garage)}
-                contents = self.initialize_unit_set(contents)
+            ##    contents = self.initialize_unit_set(contents)
             # Step 2.4 Move-out from garage to station lane
-            elif msg_type == tc.msgMVOR:
-                contents = self.handle_moveout_request(contents)
+            ##elif msg_type == tc.msgMVOR:
+            ##    contents = self.handle_moveout_request(contents)
             # Step 2.5 Move-in from station lane to garage
-            elif msg_type == tc.msgMVIR:
-                contents = self.handle_movein_request(contents)
+            ##elif msg_type == tc.msgMVIR:
+            ##    contents = self.handle_movein_request(contents)
             # Step 2.5
 
             # Step 2.99 : Incorrect message type
@@ -159,22 +160,6 @@ class TrainServer():
                 print('Incorrect message type: %s' % msg_type)
                 contents['result'] = 'Incorrect message type'
 
-            '''
-            #---------------
-            # Conditions for each message type
-            if train_number and contents and msg_type:
-                print('Got message from %s at %s' % (message['train_number'], datetime.now()))
-                # Dispatching for process add conditions here in case new msgtype is added
-                if msg_type == tc.msgAPPR:
-                    contents = self.send_approval(train_number, contents)
-                elif msg_type == tc.msgSREP:
-                    contents = self.update_status(train_number, contents)
-                elif msg_type == tc.msgEND:
-                    contents = self.end_service(train_number, contents)
-            else:   #message has invalid format
-                print('Received message has wrong format(train_number, contents, msgtype): %s %s %s at %s'
-                      % (train_number, contents, msg_type, datetime.now()))
-            '''
 
             response['contents'] = contents
             response['msgtype'] = msg_type
@@ -268,6 +253,7 @@ class TrainServer():
                 break
         garage.occupied = unitset
         contents['result'] = True
+        contents['estimated_time'] = self.servertime + timedelta(seconds=90)    #Assume 90 secs to move out
         return contents
 
     def handle_movein_request(self, contents):

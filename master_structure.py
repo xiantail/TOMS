@@ -18,6 +18,7 @@ class StationZone(Station):
         self.center_position = float(center_position)
         self.station_range = station_range   #tuple(0.000, 0.400)
         self.assigned_lane = []
+        self.assigned_garage = []
 
     def assign_lane(self, lanes):
         for lane in lanes:
@@ -121,6 +122,7 @@ class Garage():
         self.unitsets = []
         self.booked = []
         self.connection = []
+        self.assigned_slots = []
 
     def add_connection(self, lane):
         self.connection.append(lane)

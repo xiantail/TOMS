@@ -5,15 +5,20 @@ class TrainStatus():
     '''
 
     #Constants
-    #msgtype for communication
-    msgAPPR = 'Approval'
+    #msgtype for header level
     msgSREP = 'Status Report'
-    msgEND = 'End Service'
-    msgSNAP = 'Get snapshot'
     msgSETT = 'Set server time'  #Only for simulation purpose
-    msgINIT = 'Initialize Unit set'
+    msgSNAP = 'Get snapshot'
+
+    #msgtype as request level
+    msgAPPR = 'Approval'    # for new train number
+    msgEND = 'End Service' # At the end of service with train number
+    msgINIT = 'Initialize Unit set' # synchronize with server info
     msgMVOR = 'Request: Move-out from garage'
     msgMVIR = 'Request: Move-in to garage'
+    msgNEXT = 'Request to move next station'
+    msgSIM = 'Request to operate as simulation mode'
+    msgREL = 'Request to release AFO'
 
     #Train Status
     staPREP = 'Preparation'         #Not approved yet
@@ -35,4 +40,8 @@ class TrainStatus():
     stuMVIN = 'Move-in'
     stuWAIT = 'Waiting'
     stuARRV = 'Arrived'
-
+    stuACTV = 'Active'
+    stuDEAC = 'Deactivated'
+    stuOFF = 'Turned off'
+    stuLAUN = 'Launching'
+    stuASGN = 'Train number assigned'
