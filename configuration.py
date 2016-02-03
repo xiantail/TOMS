@@ -14,11 +14,13 @@ def reset_config():
                         'port':9877}
     config['sim_server'] ={'host_sim':'127.0.0.1',
                            'port_sim':9878}
+    # to be shifted from csv file into database (sqlite)
     config['datafile'] = {'station_list':'station_list.py',
                               'station_zone':'station_zone.csv',
                               'track_list':'track_list.csv',
                               'garage_list':'garage_list.csv',
                               'lane_list': 'lane_list.csv',
                               'unit_set': 'unit_set.csv'}
+    config['database'] = {'file': 'toms.sqlite'}
     with open('config.ini', 'wt') as configfile:
         config.write(configfile)
